@@ -30,6 +30,9 @@ public class ModelDatabaseManagement {
 	public static final String DOI = "DOI";
 	public static final String HASFILE = "HASFILE";
 	
+	
+	public static final String ORIGINAL_SBML = "ORIGINAL_SBML";
+	
 	private static ModelDatabaseManagement _instance;
 	
 	public static ModelDatabaseManagement getInstance(){
@@ -40,13 +43,41 @@ public class ModelDatabaseManagement {
 	}
 	
 	private Map<String, Map<String, String>> infoModels;
+	private Map<String, String> changeNames;
 	
 	private ModelDatabaseManagement(){
 		try {
 			infoModels = populateinfo();
+			populateSBMLChangeNames();
 		} catch (Exception e) {
 			throw new RuntimeException("Server models problem!!", e);
 		}
+		
+		verifyOriginalFiles();
+	}
+	
+	private void populateSBMLChangeNames() {
+		changeNames = new HashMap<String, String>();
+		changeNames.put("yeast 7.00", "yeast_7.00_cobra.xml");
+		changeNames.put("iFap484", "iFap484.V01.00.xml");
+		changeNames.put("iBif452", "iBif452.V01.00.xml");
+		
+		changeNames.put("iSS352", "mmc11.xml");
+		
+		changeNames.put("iAK692", "1752-0509-6-71-s5.xml");
+		changeNames.put("iAL1006", "iAl1006 v1.00.xml");
+		
+		changeNames.put("iCyh755", "8802 iCyh.xml");
+		changeNames.put("iCyc792", "7424 iCyc.xml");
+		changeNames.put("iCyn731", "7425 iCyn.xml");
+		changeNames.put("iCyj826", "7822 iCyj.xml");
+		changeNames.put("iCyp752", "8801 iCyp.xml");
+		
+		changeNames.put("iCG238", "1471-2180-12-s1-s5-s5.xml");
+		changeNames.put("iCG230", "1471-2180-12-s1-s5-s6.xml");
+		
+		changeNames.put("iNJ661m", "1752-0509-4-160-s2.xml");
+		changeNames.put("iNJ661v", "1752-0509-4-160-s4.xml");
 		
 	}
 
@@ -56,8 +87,14 @@ public class ModelDatabaseManagement {
 		RestClient client = new RestClient();
 		
 		ModelsIndex models = client.index(false);
-		for(ModelInfo m : models)
-			ret.put(m.getId()+"", convert(m));
+		for(ModelInfo m : models){
+			
+			String id = m.getName().trim();
+			if(ret.containsKey(id))
+				throw new RuntimeException("Model alredy exists " + id);
+			
+			ret.put(id+"", convert(m));
+		}
 		
 		return ret;
 	}
@@ -80,7 +117,7 @@ public class ModelDatabaseManagement {
 		info.put(TAXONOMY, taxonomy);
 		info.put(URL, publication);
 		info.put(YEAR, year);
-		info.put(DOI, publication.replace("http://dx.doi.org/", ""));
+		info.put(DOI, publication.replace("http://dx.doi.org/", "").trim());
 		info.put(HASFILE, hasFile+"");
 		
 		return info;
@@ -92,10 +129,12 @@ public class ModelDatabaseManagement {
 		for(Map<String, String> info : infoModels.values()){
 			String keyValue = info.get(key);
 			String valueValue = info.get(value);
+			if(valueValue == null) continue;
 			
 			Set<String> set = ret.get(keyValue);
 			if(set == null){
 				set = new HashSet<String>();
+				
 				ret.put(keyValue, set);
 			}
 			set.add(valueValue);
@@ -111,6 +150,34 @@ public class ModelDatabaseManagement {
 				
 		}
 		return ret;
+	}
+	
+	public Map<String, Set<String>> getDoiToModelId(){
+		return getAgregatedInformation(DOI, NAME);
+	}
+	
+	public Map<String, String> getModeIdToId(){
+		Map<String, Set<String>> info = getAgregatedInformation(NAME, ID);
+		return convertToDic(info);
+	}
+	
+	public Map<String, String> getModeIdToDoi() {
+		Map<String, Set<String>> info = getAgregatedInformation(NAME, DOI);
+		return convertToDic(info);
+
+	}
+	
+	private Map<String, String> convertToDic(Map<String, Set<String>> info){
+		Map<String, String> dic = new HashMap<String, String>();
+		for(String id : info.keySet()){
+			Set<String> ids = info.get(id);
+			if(ids.size() > 1)
+				throw new RuntimeException("Problem in model ids " + id + ids);
+			
+			dic.put(id, ids.iterator().next());
+		}
+		
+		return dic;
 	}
 	
 	public Map<String, Set<String>> getFilteredRepeatedModel(){
@@ -147,11 +214,71 @@ public class ModelDatabaseManagement {
 		writeInfo(new OutputStreamWriter(System.out), "\t", infoFiltered);
 	}
 	
+	public Map<String, String> getOriginalSBML(){
+		Map<String, Set<String>> info = getAgregatedInformation(NAME, ORIGINAL_SBML);
+		
+//		MapUtils.prettyPrint(info);
+		return convertToDic(info);
+	}
+	
+	public Set<String> getModelsWithOriginalSBML(){
+		return new TreeSet<String>(getOriginalSBML().keySet());
+	}
+	
+	
+	private Map<String, String> verifyOriginalFiles(){
+		
+		Map<String, Set<String>> files = FilesManagement.getInstance().getAllSBMLFiles();
+		Map<String, String> modelToDoi = getModeIdToDoi();
+		String absolutePathMat = FilesManagement.getInstance().getAbsolutePathSuplementaryMat();
+		Map<String, Set<String>> models = getDoiToModelId();
+		Map<String, String> modelToFiles = new HashMap<String, String>();
+		
+		boolean allOk = true;
+		for(String id : files.keySet()){
+			
+			Set<String> filesSet = files.get(id);
+			Set<String> modelIdSet = models.get(id);
+			boolean verified = modelIdSet != null && filesSet!=null && filesSet.size() ==1 && modelIdSet.size() == 1;
+			
+			if(verified){
+				String modelId = modelIdSet.iterator().next();
+				String fileName = filesSet.iterator().next();
+				
+				infoModels.get(modelId).put(ORIGINAL_SBML, absolutePathMat+ "/"+ modelToDoi.get(modelId)+"/"+fileName);
+				modelToFiles.put(modelId, fileName);
+			}else{
+				System.out.println(id + "\t"+ modelIdSet);
+				for(String modelId : modelIdSet){
+					
+					String fileName = changeNames.get(modelId);
+					verified = modelId !=null;
+					if(!verified)		
+						System.out.println(id + "\t" + files.get(id) + "\t" + models.get(id) + "\t" + verified + "\t" + modelId);
+					else
+						modelToFiles.put(modelId, fileName);
+					
+					infoModels.get(modelId).put(ORIGINAL_SBML, absolutePathMat+ "/"+ modelToDoi.get(modelId)+"/"+fileName);
+					allOk = allOk && verified;
+				}
+			}
+		}
+		
+		if(!allOk)
+			throw new RuntimeException("Problem in model SBML Files!!");
+		
+		return modelToFiles;
+	}
+	
+	
+	
+	
+	
 	@Override
 	public String toString() {
 		StringWriter w = new StringWriter();
 		try {
-			writeInfo(w, "\n", infoModels);
+			writeInfo(w, "\t", infoModels);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -165,8 +292,8 @@ public class ModelDatabaseManagement {
 	}
 	
 	private void writeInfo(Writer w, String sepFile, Map<String, Map<String, String>> infoToPrint) throws IOException{
-		String header = "ID" + sepFile + "Model" + sepFile + "Organism" +sepFile+ "Taxonomy"+ sepFile + "Author" + sepFile + "Year" + sepFile + "Publication" +sepFile+"HasFile"+ "\n";
-		w.write(header);
+//		String header = "ID" + sepFile + "Model" + sepFile + "Organism" +sepFile+ "Taxonomy"+ sepFile + "Author" + sepFile + "Year" + sepFile + "Publication" +sepFile+"HasFile"+ "\n";
+//		w.write(header);
 		String info = MapUtils.prettyMAP2LineKeySt(infoToPrint, MapUtils.getSecondMapKeys(infoToPrint),"null");
 		w.write(info);
 		w.flush();

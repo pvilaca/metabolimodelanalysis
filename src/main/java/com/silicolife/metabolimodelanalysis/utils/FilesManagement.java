@@ -1,10 +1,15 @@
 package com.silicolife.metabolimodelanalysis.utils;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class FilesManagement {
 	
@@ -41,6 +46,7 @@ public class FilesManagement {
 		
 	}
 	
+	
 	public Set<String> getAllDois(){
 		if(allDois == null){
 			allDois = getAllDoisFromFolder(supplementaryFolder);
@@ -66,6 +72,7 @@ public class FilesManagement {
 		return sbmlDois;
 	}
 	
+	
 	private Set<String> getAllDoisFromFolder(String folder){
 		
 		return getAllDoisFromFolderAux("", new File(folder), new HashSet<String>());
@@ -74,7 +81,6 @@ public class FilesManagement {
 	private Set<String> getAllDoisFromFolderAux(String back, File folder, Set<String> dois){
 		
 		File[] list = folder.listFiles();
-		System.out.println(folder.getName()+" "+ isAllFolders(list));
 		if (folder.isDirectory() && isAllFolders(list)){
 			for(File f:list)
 				getAllDoisFromFolderAux((back.equals("")?"":back+"/")+f.getName(), f, dois);	
@@ -94,6 +100,56 @@ public class FilesManagement {
 		
 		return ret;
 	}
+	
+	
+	public Map<String, Set<String>> getAllSBMLFiles(){
+		return getAllFiles(supplementaryFolder, new FilenameFilter() {
+			
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".xml");
+			}
+		});
+	}
+	
+	public String getAbsolutePathSuplementaryMat(){
+		
+		File f = new File(supplementaryFolder);
+		return f.getAbsolutePath();
+	}
+	
+	public Map<String, Set<String>> getAllFiles(String folder, FilenameFilter filter){
+		
+		
+		Set<String> allDois = getAllDoisFromFolder(folder);
+		Map<String, Set<String>> info = new HashMap<String, Set<String>>();
+		for(String d : allDois){
+			
+			Set<String> fileSet = getFiles(folder+"/"+d, filter);
+			if(fileSet.size() > 0)
+				info.put(d, fileSet);
+		}
+		
+		return info;
+	}
+	
+	private Set<String> getFiles(String folder, FilenameFilter filter){
+		File f = new File(folder);
+		
+		String[] files = null;
+		
+		if(filter != null)
+			files = f.list(filter);
+		else
+			files = f.list();
+		return new TreeSet<String>(Arrays.asList(files));
+	}
+	
+	
+//	public void normalizeSBMLFileNames(String folder){
+//		Map<K, V>
+//	}
+	
+	
 	
 	
 }

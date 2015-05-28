@@ -1,8 +1,5 @@
 package com.silicolife.metabolimodelanalysis.utils;
 
-import static org.junit.Assert.*;
-
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -64,46 +61,16 @@ public class ModelDatabaseManagementTest {
 			
 		}
 	}
+
+
+//	@Test
+	public void getOriginalFiles(){
+		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML());
+	}
 	
 	@Test
-	public void readSbml(){
-	
-		
-		Map<String, String> info = ModelDatabaseManagement.getInstance().getOriginalSBML();
-		
-		MapUtils.prettyPrint(info);
-		for(String id : info.keySet()){
-			
-			String file = info.get(id);
-			System.out.println(id + "\t" + file);
-			try {
-				JSBMLReader reader = new JSBMLReader(file, "", false);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (XMLStreamException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ErrorsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JSBMLValidationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				
-				System.out.println(e.getProblems().size() + "\t" + e.getProblemsByClass());
-			}
-			
-		}
+	public void getModelsWithSBML(){
+		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML());
+		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML().size());
 	}
-
 }

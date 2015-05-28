@@ -12,4 +12,10 @@ public class FilesManagementTest{
 		System.out.println("All Dois: " + t.size() + " "+ t );
 		
 	}
+	
+	@Test
+	public void getAllSBMLFiles() {
+		System.out.println(FilesManagement.getInstance().getAllSBMLFiles());
+		
+	}
 }

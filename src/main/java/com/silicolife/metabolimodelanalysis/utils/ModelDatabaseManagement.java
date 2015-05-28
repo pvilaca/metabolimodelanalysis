@@ -1,5 +1,6 @@
 package com.silicolife.metabolimodelanalysis.utils;
 
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -13,9 +14,16 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import pt.uminho.ceb.biosystems.mew.availablemodelsapi.RestClient;
 import pt.uminho.ceb.biosystems.mew.availablemodelsapi.ds.ModelInfo;
 import pt.uminho.ceb.biosystems.mew.availablemodelsapi.ds.ModelsIndex;
+import pt.uminho.ceb.biosystems.mew.biocomponents.validation.io.JSBMLValidationException;
+import pt.uminho.ceb.biosystems.mew.biocomponents.validation.io.JSBMLValidator;
+import pt.uminho.ceb.biosystems.mew.biocomponents.validation.io.jsbml.validators.ElementValidator;
 import pt.uminho.ceb.biosystems.mew.utilities.datastructures.map.MapUtils;
 
 public class ModelDatabaseManagement {
@@ -32,6 +40,8 @@ public class ModelDatabaseManagement {
 	
 	
 	public static final String ORIGINAL_SBML = "ORIGINAL_SBML";
+	public static final String ORIGINAL_SBML_VALID = "ORIGINAL_SBML_VALID";
+	public static final String ORIGINAL_SBML_RESOLVABLE = "ORIGINAL_SBML_RESOLVABLE";
 	
 	private static ModelDatabaseManagement _instance;
 	
@@ -54,6 +64,10 @@ public class ModelDatabaseManagement {
 		}
 		
 		verifyOriginalFiles();
+	}
+	
+	public Map<String, Map<String, String>> getInfoModels() {
+		return infoModels;
 	}
 	
 	private void populateSBMLChangeNames() {
@@ -81,6 +95,7 @@ public class ModelDatabaseManagement {
 		
 	}
 
+	
 	private Map<String, Map<String, String>> populateinfo() throws Exception {
 		
 		Map<String, Map<String, String>> ret = new HashMap<String, Map<String, String>>();
@@ -270,7 +285,33 @@ public class ModelDatabaseManagement {
 		return modelToFiles;
 	}
 	
-	
+	public Map<String, Map<Class<ElementValidator>, Set<String>>> verifyOriginalSBML() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException{
+		
+		Map<String, Map<Class<ElementValidator>, Set<String>>> erros = new HashMap<String, Map<Class<ElementValidator>, Set<String>>>(); 
+		Map<String, String> sbmlFiles = getOriginalSBML();
+		for(String id : sbmlFiles.keySet()){
+			
+			String file = sbmlFiles.get(id);
+			
+			JSBMLValidator validator = new JSBMLValidator(file);
+			boolean valid = true;
+			boolean resolvable = true;
+			try {
+				validator.validate();
+			} catch (JSBMLValidationException e) {
+				valid=false;
+				erros.put(id, e.getProblemsByClass());
+				resolvable = e.isSBMLResolvable();
+				infoModels.get(id).put(ORIGINAL_SBML_VALID, valid+"");
+				infoModels.get(id).put(ORIGINAL_SBML_RESOLVABLE, resolvable+"");
+			}
+			
+			System.out.println(id + "\t" +valid + "\t" + resolvable + "\t"+ file);
+//			JSBMLFileValidator validator = new JSBMLFileValidator();
+//			validator
+		}
+		return erros;
+	}
 	
 	
 	

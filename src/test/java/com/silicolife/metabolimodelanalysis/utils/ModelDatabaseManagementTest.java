@@ -1,11 +1,17 @@
 package com.silicolife.metabolimodelanalysis.utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.junit.Test;
+import org.xml.sax.SAXException;
+
+import pt.uminho.ceb.biosystems.mew.biocomponents.validation.io.jsbml.validators.ElementValidator;
+import pt.uminho.ceb.biosystems.mew.utilities.datastructures.collection.CollectionUtils;
 import pt.uminho.ceb.biosystems.mew.utilities.datastructures.map.MapUtils;
 
 public class ModelDatabaseManagementTest {
@@ -61,9 +67,37 @@ public class ModelDatabaseManagementTest {
 		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML());
 	}
 	
-	@Test
+//	@Test
 	public void getModelsWithSBML(){
 		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML());
 		System.out.println(ModelDatabaseManagement.getInstance().getOriginalSBML().size());
+	}
+	
+	@Test
+	public void verifyOriginalModels() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException{
+		
+		Map<String, Map<Class<ElementValidator>, Set<String>>> erros = ModelDatabaseManagement.getInstance().verifyOriginalSBML();
+		for(String id : erros.keySet()){
+			
+			System.out.println("####################  " + id + "("+ModelDatabaseManagement.getInstance().getInfoModels().get(id).get("ORIGINAL_SBML_RESOLVABLE") +")"  + "   #####################" + ModelDatabaseManagement.getInstance().getInfoModels().get(id).get("ORIGINAL_SBML"));
+			
+			System.out.println(CollectionUtils.join(CollectionUtils.aggregate(erros.get(id).values()), "\n"));
+			System.out.println("#####################################################");
+		}
+		
+	}
+	
+	@Test
+	public void verifyOriginalModelsTypes() throws FileNotFoundException, ParserConfigurationException, SAXException, IOException{
+		
+		Map<String, Map<Class<ElementValidator>, Set<String>>> erros = ModelDatabaseManagement.getInstance().verifyOriginalSBML();
+		for(String id : erros.keySet()){
+			
+			System.out.println("####################  " + id + "("+ModelDatabaseManagement.getInstance().getInfoModels().get(id).get("ORIGINAL_SBML_RESOLVABLE") +")"  + "   #####################" + ModelDatabaseManagement.getInstance().getInfoModels().get(id).get("ORIGINAL_SBML"));
+			
+			System.out.println(CollectionUtils.join(erros.get(id).keySet(), "\n"));
+			System.out.println("#####################################################");
+		}
+		
 	}
 }

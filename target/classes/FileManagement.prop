@@ -1,6 +1,0 @@
-METABOLIC_MODELS_PROJECT="../metabolicmodels"
-
-SUPPLEMENTARY_MATERIALS=../metabolicmodels/originals/suplementary
-SBML=../metabolicmodels/originals/sbml
-EXCEL=../metabolicmodels/originals/excel
-PDF=../metabolicmodels/originals/pdf

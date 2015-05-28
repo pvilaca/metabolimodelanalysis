@@ -12,6 +12,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.7</maven.compiler.source>
+  		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
 	<repositories>
 		<repository>
@@ -19,6 +21,12 @@
 			<url>http://193.137.11.210:8081/nexus/content/repositories/biosystems-releases</url>
 		</repository>
 	</repositories>
+	
+	<build>
+	<outputDirectory>/Users/pvilaca/git/metabolimodelanalysis/t/classes</outputDirectory>
+    <testOutputDirectory>/Users/pvilaca/git/metabolimodelanalysis/t/test-classes</testOutputDirectory>
+    <directory>/Users/pvilaca/git/metabolimodelanalysis/t</directory>
+	</build>
 
 	<dependencies>
 		<dependency>
@@ -30,6 +38,12 @@
 			<groupId>pt.uminho.ceb.biosystems.mew</groupId>
 			<artifactId>mewcore</artifactId>
 			<version>0.0.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>cplex</groupId>
+					<artifactId>cplex</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>pt.uminho.ceb.biosystems.mew</groupId>

@@ -4,15 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
-
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
-import pt.uminho.ceb.biosystems.mew.biocomponents.container.io.readers.ErrorsException;
-import pt.uminho.ceb.biosystems.mew.biocomponents.container.io.readers.JSBMLReader;
-import pt.uminho.ceb.biosystems.mew.biocomponents.validation.io.JSBMLValidationException;
 import pt.uminho.ceb.biosystems.mew.utilities.datastructures.map.MapUtils;
 
 public class ModelDatabaseManagementTest {
